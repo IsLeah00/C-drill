@@ -1,5 +1,6 @@
 #include "my.h"
 
+int foo;
 int main()
 {
     foo = 7;
