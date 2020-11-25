@@ -1,97 +1,97 @@
 #include "std_lib_facilities.h"
 
-struct Point {
-    int x;
-    int y;
+class Point {
+public:
+    Point(double x, double y);
+    Point();
+    double x() const { return m_x; }
+    double y() const { return m_y; }
+private:
+    double m_x;
+    double m_y;
 };
 
+Point::Point(double x, double y)
+: m_x{x}, m_y{y} {  };
+
+Point::Point()
+: m_x{0}, m_y{0} {  };
 
 istream& operator>>(istream& is, Point& p)
 {
-    char ch1;
-    if (is >> ch1 && ch1 != '(') {
-        is.unget();
-        is.clear(ios_base::failbit);
-        return is;
-    }
+    double x, y;
+    char ch1, ch2, ch3;
 
-    char ch2;
-    char ch3;
-    int xx;
-    int yy;
-    is >> xx >> ch2 >> yy >> ch3;
-    if (!is || ch3 != ')') {
-        if (is.eof()) return is;
-        error("bad point");
-    }
-    p.x = xx;
-    p.y = yy;
+    is >> ch1 >> x >> ch2 >> y >> ch3;
+    if (is && ch1 == '(' && ch2 == ',' && ch3 == ')')
+        p = Point(x, y);
+    else 
+        is.clear(ios_base::failbit);
+    
     return is;
 }
 
-
-
-ostream& operator<<(ostream& os, Point& p)
+ostream& operator<<(ostream& os, vector<Point>& vp)
 {
-    return os << '(' << p.x << ',' << p.y << ')';
+    for (Point p : vp)
+        os << '(' << p.x() << ", " << p.y() << ')' << '\n';
+
+    return os;
 }
 
+constexpr int no_points{7};
+const string of_name = "mydata.txt";
+const string if_name = "mydata.txt";
 
-
-void fill_from_file(vector<Point>& points, string& name)
+void get_points(istream& is, vector<Point>& points, size_t size)
+// if size is 0, do not limit number of points to be obtained
 {
-    ifstream ist {name};
-    ist.exceptions(ist.exceptions()|ios_base::badbit);
-
-    if (!ist) error("can't open input file ", name);
-    for (Point p; ist >> p; )
-        points.push_back(p);
+    for(Point p; is >> p;) {
+        if (is) {
+            points.push_back(p);
+        }
+        else {
+            cout << "Not a point!\n";
+            is.clear();
+            is.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+        if ((size != 0) && (points.size() >= size)) break;
+    }
 }
 
 int main()
-try {
-    cout << "Please enter seven sets of x, y points:\n";
+try{
     vector<Point> original_points;
 
-    while (original_points.size() < 7) {
-        Point p;
-        cin >> p;
-        original_points.push_back(p);
-    } 
+    cout << "Write " << no_points << " points as pairs of coordinates with" 
+         << " format (x,y):\n";
+    get_points(cin, original_points, no_points);
 
+    cout << "You've entered those points:\n" << original_points;
 
-
-    for (Point p : original_points)
-        cout << p;
-    cout << '\n';
-
-
-
-    string fname = "mydata.txt";
-    ofstream ost { fname };
-    if (!ost) error("could not open file ", fname);
-
-    for (Point p : original_points)
-        ost << p;
+    cout << "Writing to file " << of_name << " ...\n";
+    ofstream ost{of_name};
+    if (!ost) error("can't open output file", of_name);
+    ost << original_points;
     ost.close();
 
-
-
+    cout << "Reading point from file " << if_name << " ...\n";
     vector<Point> processed_points;
-    fill_from_file(processed_points, fname);
+    ifstream ist{if_name};
+    if (!ist) error("can't open input file ", if_name);
+    get_points(ist, processed_points, 0);
 
-    for (Point p : processed_points)
-        cout << p;
-    cout << '\n';
-
-    if (original_points.size() != processed_points.size())
-        cout << "Something's wrong!\n";
+    cout << "Points in file \"" << if_name << "\":\n" <<  processed_points;
+    
+    return 0;
 }
-catch (exception& e) {
-    cerr << "Error: " << e.what() << '\n';
+catch(exception& e)
+{
+    cerr << e.what() << '\n';
     return 1;
 }
-catch (...) {
-    cerr << "Something terrible has happened!\n";
+catch(...)
+{
+    cerr << "Unknown exception!!\n";
     return 2;
 }
