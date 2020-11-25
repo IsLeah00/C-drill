@@ -44,7 +44,6 @@ const string of_name = "mydata.txt";
 const string if_name = "mydata.txt";
 
 void get_points(istream& is, vector<Point>& points, size_t size)
-// if size is 0, do not limit number of points to be obtained
 {
     for(Point p; is >> p;) {
         if (is) {
